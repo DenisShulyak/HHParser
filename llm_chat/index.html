@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LLM Chat — скоро будет</title>
+  <style>
+    :root { color-scheme: dark; font-family: Inter, system-ui, sans-serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: #10131a; color: #eef1f7; display: grid; place-items: center; }
+    .chat { width: min(720px, 94vw); height: min(760px, 92vh); display: flex; flex-direction: column; background: #191e29; border: 1px solid #2d3546; border-radius: 18px; overflow: hidden; box-shadow: 0 24px 80px #0008; }
+    header { padding: 22px 24px; border-bottom: 1px solid #2d3546; }
+    h1 { margin: 0 0 5px; font-size: 21px; } .subtitle { color: #909bad; font-size: 13px; }
+    #messages { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 14px; }
+    .message { max-width: 82%; padding: 12px 15px; border-radius: 14px; line-height: 1.45; white-space: pre-wrap; }
+    .user { align-self: flex-end; background: #405de6; } .assistant { align-self: flex-start; background: #252d3b; color: #d7dce6; }
+    form { display: flex; gap: 10px; padding: 17px; border-top: 1px solid #2d3546; }
+    input { flex: 1; min-width: 0; padding: 13px 15px; border: 1px solid #3b465b; border-radius: 11px; background: #11151d; color: inherit; font: inherit; outline: none; }
+    input:focus { border-color: #657cff; } button { border: 0; border-radius: 11px; padding: 0 20px; color: white; background: #5068ed; font: inherit; font-weight: 600; cursor: pointer; } button:disabled { opacity: .55; cursor: wait; }
+  </style>
+</head>
+<body>
+  <main class="chat">
+    <header><h1>Чат с LLM</h1><div class="subtitle">Версия 0.0.1 (демо)</div></header>
+    <section id="messages" aria-live="polite">
+      <div class="message assistant">Привет! Напишите сообщение — я пока отвечу честной ошибкой 🙂</div>
+    </section>
+    <form id="chat-form"><input id="message" autocomplete="off" placeholder="Введите сообщение…" aria-label="Сообщение"><button type="submit">Отправить</button></form>
+  </main>
+  <script>
+    const form = document.querySelector('#chat-form');
+    const input = document.querySelector('#message');
+    const messages = document.querySelector('#messages');
+    const addMessage = (text, role) => { const node = document.createElement('div'); node.className = `message ${role}`; node.textContent = text; messages.append(node); messages.scrollTop = messages.scrollHeight; };
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault(); const message = input.value.trim(); if (!message) return;
+      addMessage(message, 'user'); input.value = ''; input.disabled = true; form.querySelector('button').disabled = true;
+      try { const result = await fetch('/api/chat', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({message}) }); const data = await result.json(); addMessage(data.error || 'Произошла ошибка.', 'assistant'); }
+      catch { addMessage('Не удалось связаться с сервером.', 'assistant'); }
+      finally { input.disabled = false; form.querySelector('button').disabled = false; input.focus(); }
+    });
+  </script>
+</body>
+</html>
